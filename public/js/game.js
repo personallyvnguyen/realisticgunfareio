@@ -1769,32 +1769,31 @@ export class Game {
     ctx.fillStyle = 'rgba(220,230,220,0.75)';
     ctx.fillText('AFTER-ACTION REPORT', W / 2, H / 2 - bh / 2 + 108);
 
-    // Two side-by-side columns: YOUR FORCE vs ENEMY FORCE.
-    const colY = H / 2 - 40, lh = 26;
-    const cxL = W / 2 - 150, cxR = W / 2 + 150;
-    const stat = (x, label, val, col) => {
-      ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(200,214,200,0.7)';
-      ctx.font = '500 15px system-ui, sans-serif'; ctx.fillText(label, x - 92, 0);
-      ctx.textAlign = 'right'; ctx.fillStyle = col || '#e6efe6';
-      ctx.font = '700 15px system-ui, sans-serif'; ctx.fillText(String(val), x + 92, 0);
-    };
+    // Row-by-row comparison: [ your value | metric | enemy value ].
+    const colY = H / 2 - 44, lh = 30;
     ctx.save(); ctx.translate(0, colY);
     ctx.textAlign = 'center'; ctx.font = '700 18px system-ui, sans-serif';
-    ctx.fillStyle = '#6fd0ff'; ctx.fillText('YOUR FORCE', cxL, -30);
-    ctx.fillStyle = '#ff7a6b'; ctx.fillText('ENEMY FORCE', cxR, -30);
+    ctx.fillStyle = '#6fd0ff'; ctx.fillText('YOUR FORCE', W / 2 - 120, -32);
+    ctx.fillStyle = 'rgba(200,214,200,0.6)'; ctx.font = '600 13px system-ui, sans-serif'; ctx.fillText('vs', W / 2, -32);
+    ctx.fillStyle = '#ff7a6b'; ctx.font = '700 18px system-ui, sans-serif'; ctx.fillText('ENEMY FORCE', W / 2 + 120, -32);
     const rows = [
-      ['committed', sf.player, sf.enemy, null],
-      ['killed (lost)', lostP, lostE, '#ff9a8a'],
+      ['committed', sf.player, sf.enemy, '#e6efe6'],
+      ['killed', lostP, lostE, '#ff9a8a'],
       ['still standing', aliveP, aliveE, '#8fe0a0'],
     ];
     rows.forEach((r, i) => {
-      ctx.save(); ctx.translate(0, i * lh); stat(cxL, r[0], r[1], r[3]); stat(cxR, r[0], r[1], r[3]); ctx.restore();
+      const yy = i * lh;
+      ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(200,214,200,0.65)'; ctx.font = '500 14px system-ui, sans-serif';
+      ctx.fillText(r[0], W / 2, yy);
+      ctx.font = '700 19px system-ui, sans-serif'; ctx.fillStyle = r[3];
+      ctx.textAlign = 'right'; ctx.fillText(String(r[1]), W / 2 - 62, yy); // your value
+      ctx.textAlign = 'left'; ctx.fillText(String(r[2]), W / 2 + 62, yy);  // enemy value
     });
     // Your personal line.
     ctx.textAlign = 'center'; ctx.fillStyle = '#cfe0d6'; ctx.font = '600 17px system-ui, sans-serif';
     const tk = this._playerFF || 0;
     ctx.fillText(`You: ${p.kills || 0} kills · ${p.deaths || 0} death${p.deaths === 1 ? '' : 's'}${tk ? ` · ${tk} friendly` : ''}`,
-      W / 2, 3 * lh + 22);
+      W / 2, 3 * lh + 24);
     ctx.restore();
 
     ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(220,230,220,0.7)';
