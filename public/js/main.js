@@ -20,7 +20,7 @@ const input = new Input(canvas);
 const game = new Game(canvas, minimap, input);
 
 // ---- Loadout selection (deploy screen) ----
-const sel = { mode: 'sp', primary: 'm4a1', secondary: 'glock17', launcher: 'none', armor: 'plate3', camo: 'none', battle: 2 };
+const sel = { mode: 'sp', primary: 'm4a1', secondary: 'glock17', launcher: 'javelin', armor: 'plate3', camo: 'none', battle: 20 };
 // Game mode. Single-player (vs AI) is the focus; online multiplayer is on the roadmap.
 const modeOpts = [
   { id: 'sp', name: 'Single-player' },
