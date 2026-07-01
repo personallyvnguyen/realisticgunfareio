@@ -3,6 +3,7 @@ import { Game } from './game.js';
 import { Sound } from './audio.js';
 import { WEAPONS, WEAPON_BY_ID, roundWeight } from './weapons.js';
 import { ARMOR, CAMO, CONFIG } from './config.js';
+import { track } from './analytics.js';
 
 const canvas = document.getElementById('game');
 const minimap = document.getElementById('minimap');
@@ -21,13 +22,14 @@ const game = new Game(canvas, minimap, input);
 
 // ---- Loadout selection (deploy screen) ----
 const sel = { mode: 'sp', primary: 'm4a1', secondary: 'glock17', launcher: 'javelin', armor: 'plate3', camo: 'none', battle: 20 };
-// Game mode. Single-player (vs AI) is the focus; online multiplayer is on the roadmap.
+// Single-player (vs AI) is the game. Online multiplayer is a someday-maybe — shown,
+// but not selectable.
 const modeOpts = [
   { id: 'sp', name: 'Single-player' },
   { id: 'mp', name: 'Multiplayer', disabled: true },
 ];
 function modeLabel(o) {
-  return o.disabled ? `${o.name}<small>in development</small>` : `${o.name}<small>vs AI battalions</small>`;
+  return o.disabled ? `${o.name}<small>someday, maybe 👀</small>` : `${o.name}<small>vs AI battalions</small>`;
 }
 // Heavy weapon you can sling ALONGSIDE your rifle — real weight, so it slows you.
 const launcherOpts = [
@@ -91,10 +93,10 @@ function buildGroup(containerId, items, key, label, title) {
     b.dataset.id = it.id;
     b.innerHTML = label(it);
     if (title) b.title = title(it);
-    if (it.disabled) {                       // e.g. Multiplayer — shown but not selectable yet
+    if (it.disabled) {                       // e.g. Multiplayer — shown but not selectable
       b.classList.add('disabled');
       b.style.opacity = '0.45'; b.style.cursor = 'not-allowed';
-      b.title = 'In development — single-player is the focus right now';
+      b.title = 'Someday, maybe — single-player is the game for now';
       c.appendChild(b);
       continue;
     }
@@ -131,10 +133,22 @@ updateCarry();
 
 // ---- Game loop ----
 let last = performance.now();
+let deployTime = 0, matchReported = false;
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   if (game.running) game.update(dt);
+  // Report how a battle ended and how long it ran (real play-time per match).
+  if (game.running && game.matchOver && !matchReported) {
+    matchReported = true;
+    track('match_end', {
+      result: game.matchResult || 'unknown',
+      duration_sec: Math.round((performance.now() - deployTime) / 1000),
+      kills: game.player.kills || 0,
+      deaths: game.player.deaths || 0,
+      scale: sel.battle,
+    });
+  }
   game.render();
   input.endFrame();
   requestAnimationFrame(frame);
@@ -149,6 +163,8 @@ function deploy() {
   overlay.classList.add('hidden');
   game.running = true;
   last = performance.now();
+  deployTime = performance.now(); matchReported = false;
+  track('deploy', { scale: sel.battle, primary: sel.primary, launcher: sel.launcher });
   Sound.init(); // AudioContext must be created from a user gesture
 }
 document.getElementById('play').addEventListener('click', deploy);

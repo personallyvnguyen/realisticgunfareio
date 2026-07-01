@@ -291,6 +291,11 @@ html, body {
 .magcount { display: block; font-size: 11px; color: #8b9a7d; margin-top: 2px; }
 .card h1 { font-size: 34px; letter-spacing: -1px; }
 .card h1 span { color: var(--green); }
+.beta {
+  font-size: 12px; font-weight: 700; letter-spacing: 1px; vertical-align: super;
+  color: #07120a; background: var(--green); padding: 2px 7px; border-radius: 5px;
+  margin-left: 8px; text-transform: uppercase;
+}
 .tag { color: #9aa88d; margin: 8px 0 10px; font-size: 14px; }
 .community { margin: 0 0 20px; font-size: 14px; }
 .community a {
