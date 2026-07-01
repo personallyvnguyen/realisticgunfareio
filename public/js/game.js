@@ -77,7 +77,7 @@ export class Game {
     for (let i = 0; i < CONFIG.BOT_COUNT; i++) this._spawnBot(i);
 
     this.squad = [];          // friendly AI teammates
-    this.squadOrder = 'follow'; // 'follow' (cautious, near you) or 'push' (advance)
+    this.squadOrder = 'push'; // default: advance on the enemy ('follow'/'suppress'/'hold' via Y)
     this._squadCount = 0;      // number of fire-teams per side (set at deploy)
 
     for (const type of ['car', 'technical', 'tank']) {
