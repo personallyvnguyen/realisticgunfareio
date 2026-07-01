@@ -534,12 +534,15 @@ export class Game {
       p.x = v.x + Math.cos(v.angle + Math.PI / 2) * (v.radius + 1);
       p.y = v.y + Math.sin(v.angle + Math.PI / 2) * (v.radius + 1);
       this.world.resolve(p, p.r);
-      // Hand the rig to the AI so it doesn't sit abandoned: a gunner riding along slides
-      // into the driver's seat and keeps it in the fight (a nearby ally then fills the
-      // gun via _crewVehicle). Otherwise it's left empty for a crew to commandeer.
+      // Hand the rig to the AI so it doesn't sit abandoned. If you bail from the wheel,
+      // a gunner riding along slides across to drive and keeps it in the fight; if you
+      // bail from the GUN (an ally was driving), just free the gun — they drive on and a
+      // nearby ally re-mans it via _crewVehicle.
       if (v.driver === p) {
         v.driver = null; v.speed = 0; v.station = 'driver';
         if (v.gunner && v.gunner.alive) { v.driver = v.gunner; v.gunner = null; }
+      } else if (v.gunner === p) {
+        v.gunner = null;
       }
     } else if (this._entering) {
       this._entering = null; // cancel climbing in
@@ -1327,10 +1330,21 @@ export class Game {
       const orders = ['follow', 'push', 'suppress', 'hold'];
       this.squadOrder = orders[(orders.indexOf(this.squadOrder) + 1) % orders.length];
     }
-    if (i.justPressed(' ')) { // switch vehicle station (solo: drive OR gun)
-      const v = this.player.vehicle;
-      // Locked to the wheel while an ally is manning the gun.
-      if (this.player.inVehicle && v && v.s.weapon && !v.gunner) v.station = v.station === 'driver' ? 'gunner' : 'driver';
+    if (i.justPressed(' ')) { // Space — swap your seat in an armed vehicle
+      const v = this.player.vehicle, p = this.player;
+      if (p.inVehicle && v && v.s.weapon) {
+        const mate = v.driver === p ? v.gunner : v.driver; // your AI crewmate, if any
+        if (mate && mate !== p) {
+          // SWAP with your crewmate: you take the other seat, they take yours. So you
+          // drive and they gun, then hit Space and you gun while THEY drive.
+          if (v.driver === p) { v.driver = mate; v.gunner = p; }
+          else { v.gunner = mate; v.driver = p; }
+          v.station = 'driver';
+        } else {
+          // Solo crew — alternate between driving and manning the gun yourself.
+          v.station = v.station === 'driver' ? 'gunner' : 'driver';
+        }
+      }
     }
 
     if (i.wheel) this.zoom = clamp(this.zoom * (i.wheel < 0 ? 1.12 : 0.89), CONFIG.ZOOM_MIN, CONFIG.ZOOM_MAX);
@@ -1778,7 +1792,9 @@ export class Game {
     ctx.fillStyle = '#ff7a6b'; ctx.font = '700 18px system-ui, sans-serif'; ctx.fillText('ENEMY FORCE', W / 2 + 120, -32);
     const rows = [
       ['committed', sf.player, sf.enemy, '#e6efe6'],
-      ['killed', lostP, lostE, '#ff9a8a'],
+      // "killed" = kills that side INFLICTED: your column = enemies you dropped (their
+      // losses), enemy column = your men they dropped (your losses).
+      ['killed', lostE, lostP, '#ffca8a'],
       ['still standing', aliveP, aliveE, '#8fe0a0'],
     ];
     rows.forEach((r, i) => {
