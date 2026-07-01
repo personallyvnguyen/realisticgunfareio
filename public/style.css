@@ -321,3 +321,4 @@ kbd {
 }
 #play:hover { filter: brightness(1.1); transform: translateY(-1px); }
 .note { margin-top: 20px; font-size: 11px; color: #6e7c60; line-height: 1.5; }
+.privacy { margin-top: 8px; font-size: 10px; color: #566049; }

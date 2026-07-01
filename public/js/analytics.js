@@ -7,7 +7,7 @@
 // It looks like  G-XXXXXXXXXX. While it's the placeholder, analytics is OFF —
 // no script loads and no cookies are set, so this is safe to ship as-is.
 // ---------------------------------------------------------------------------
-const GA_ID = 'G-XXXXXXXXXX';
+const GA_ID = 'G-76QKHST1ME';
 
 const enabled = /^G-[A-Z0-9]{6,}$/.test(GA_ID) && GA_ID !== 'G-XXXXXXXXXX';
 
