@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>realisticgunfare.io</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- HUD overlay (HTML for crisp text; the world is drawn on the canvas) -->
+  <div id="hud">
+    <div id="vitals">
+      <div id="status"></div>
+      <div id="healthbar"><div id="healthfill"></div><span id="healthtext">100</span></div>
+      <div id="stambar" title="stamina"><div id="stamfill"></div></div>
+      <div id="armor"></div>
+    </div>
+
+    <div id="ammo">
+      <span id="weaponname">—</span>
+      <span id="optic"></span>
+      <span id="firemode" class="firemode" title="fire selector — press V or click"></span>
+      <span id="ammocount"><b id="mag">0</b><span class="sep">/</span><i id="reserve">0</i></span>
+      <span id="magcount" class="magcount"></span>
+      <div id="reloadbar"><div id="reloadfill"></div></div>
+    </div>
+
+    <div id="scale-readout"></div>
+    <div id="killfeed"></div>
+    <canvas id="minimap" width="180" height="180"></canvas>
+
+    <div id="abilities"></div>
+    <div id="weapons-rack"></div>
+    <div id="scoreboard" class="hidden"></div>
+  </div>
+
+  <!-- Start / help screen -->
+  <div id="overlay">
+    <div class="card">
+      <h1>realisticgunfare<span>.io</span></h1>
+      <p class="tag">Real guns. Real ballistics. Real proportions. Vehicles, drones &amp; fog of war.</p>
+      <p class="community"><a href="https://discord.gg/bf2ddyRBZa" target="_blank" rel="noopener noreferrer">💬 Join the community on Discord</a></p>
+
+      <div id="loadout">
+        <div class="ldrow"><span class="ldlabel">Mode</span><div id="sel-mode" class="ldopts"></div></div>
+        <div class="ldrow"><span class="ldlabel">Primary</span><div id="sel-primary" class="ldopts"></div></div>
+        <div class="ldrow"><span class="ldlabel">Sidearm</span><div id="sel-secondary" class="ldopts"></div></div>
+        <div class="ldrow"><span class="ldlabel">Launcher</span><div id="sel-launcher" class="ldopts"></div></div>
+        <div class="ldrow"><span class="ldlabel">Armor</span><div id="sel-armor" class="ldopts"></div></div>
+        <div class="ldrow"><span class="ldlabel">Camo</span><div id="sel-camo" class="ldopts"></div></div>
+        <div class="ldrow"><span class="ldlabel">Battle</span><div id="sel-squad" class="ldopts"></div></div>
+        <div id="carry"></div>
+      </div>
+
+      <table class="controls">
+        <tr><td>Move</td><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></td></tr>
+        <tr><td>Sprint (uses stamina)</td><td><kbd>Shift</kbd></td></tr>
+        <tr><td>Walk (steady aim)</td><td><kbd>Ctrl</kbd></td></tr>
+        <tr><td>Shoot</td><td><kbd>Left Click</kbd></td></tr>
+        <tr><td>Aim down sights / scope</td><td><kbd>Right Click</kbd></td></tr>
+        <tr><td>Reload (swaps magazine)</td><td><kbd>R</kbd></td></tr>
+        <tr><td>Fire selector (safe/semi/burst/auto)</td><td><kbd>V</kbd> / click HUD</td></tr>
+        <tr><td>Loot gear / Throw grenade</td><td><kbd>F</kbd> / <kbd>G</kbd></td></tr>
+        <tr><td>Crouch / Prone</td><td><kbd>C</kbd> / <kbd>Z</kbd></td></tr>
+        <tr><td>Toggle suppressor (takes time)</td><td><kbd>T</kbd></td></tr>
+        <tr><td>Enter / exit vehicle</td><td><kbd>E</kbd></td></tr>
+        <tr><td>UAV recon / Airstrike</td><td><kbd>U</kbd> / <kbd>H</kbd></td></tr>
+        <tr><td>Radio ping</td><td><kbd>X</kbd></td></tr>
+        <tr><td>Bomber drone / FPV kamikaze</td><td><kbd>B</kbd> / <kbd>N</kbd></td></tr>
+        <tr><td>Squad order (follow/push/suppress/hold)</td><td><kbd>Y</kbd></td></tr>
+        <tr><td>Squad rally / recall (click minimap)</td><td>L-Click / R-Click map</td></tr>
+        <tr><td>Open big tactical map</td><td><kbd>M</kbd></td></tr>
+        <tr><td>Free-look / god mode (watch the battle)</td><td><kbd>O</kbd></td></tr>
+        <tr><td>Switch weapon</td><td><kbd>1</kbd> <kbd>2</kbd> / <kbd>Q</kbd> / Scroll</td></tr>
+        <tr><td>Zoom</td><td><kbd>+</kbd> <kbd>−</kbd> / <kbd>Ctrl</kbd>+Scroll</td></tr>
+        <tr><td>Re-pick loadout</td><td><kbd>Esc</kbd></td></tr>
+      </table>
+      <button id="play">Deploy</button>
+      <p class="note">Simulated in real meters &amp; m/s. A human is 0.5&nbsp;m wide; an AK round leaves the barrel at 715&nbsp;m/s. Guns &amp; armor add real weight that slows you; scopes have true magnification &amp; breathing sway.</p>
+    </div>
+  </div>
+
+  <!-- In-game controls reference -->
+  <button id="help-btn" title="Controls (press /)">?</button>
+  <div id="help-panel" class="hidden">
+    <h3>Field Manual</h3>
+    <div class="help-cols">
+      <div class="help-sec">
+        <h4>Move &amp; fight</h4>
+        <table>
+          <tr><td>Move / Sprint / Walk</td><td><kbd>WASD</kbd> · <kbd>Shift</kbd> · <kbd>Ctrl</kbd></td></tr>
+          <tr><td>Shoot / Aim down sights</td><td><kbd>L-Click</kbd> · <kbd>R-Click</kbd></td></tr>
+          <tr><td>Reload · Fire selector</td><td><kbd>R</kbd> · <kbd>V</kbd></td></tr>
+          <tr><td>Crouch / Prone</td><td><kbd>C</kbd> · <kbd>Z</kbd></td></tr>
+          <tr><td>Suppressor (timed)</td><td><kbd>T</kbd></td></tr>
+          <tr><td>Loot / Throw grenade</td><td><kbd>F</kbd> · <kbd>G</kbd></td></tr>
+          <tr><td>Switch weapon</td><td><kbd>1</kbd> <kbd>2</kbd> · <kbd>Q</kbd> · scroll</td></tr>
+          <tr><td>Zoom · scope mag (variable)</td><td>scroll · <kbd>Ctrl</kbd>+scroll (ADS)</td></tr>
+        </table>
+      </div>
+      <div class="help-sec">
+        <h4>Command &amp; support</h4>
+        <table>
+          <tr><td>Vehicle enter/exit · station</td><td><kbd>E</kbd> · <kbd>Space</kbd></td></tr>
+          <tr><td>Squad order</td><td><kbd>Y</kbd> <span class="muted">or click it on the HUD</span></td></tr>
+          <tr><td>Squad rally / recall</td><td>L-click / R-click <span class="muted">minimap or big map</span></td></tr>
+          <tr><td>Big tactical map</td><td><kbd>M</kbd> <span class="muted">(click to rally)</span></td></tr>
+          <tr><td>Free-look / god mode</td><td><kbd>O</kbd> <span class="muted">(WASD pan · watch the battle)</span></td></tr>
+          <tr><td>UAV · Airstrike · Ping</td><td><kbd>U</kbd> · <kbd>H</kbd> · <kbd>X</kbd></td></tr>
+          <tr><td>Bomber · FPV kamikaze</td><td><kbd>B</kbd> · <kbd>N</kbd></td></tr>
+          <tr><td>Re-pick loadout</td><td><kbd>Esc</kbd></td></tr>
+        </table>
+        <p class="muted tip">Every HUD prompt is a <b>button</b> — click the ability chips, weapon cards, ammo (reload) or squad order instead of the key.</p>
+      </div>
+    </div>
+    <div class="help-sec help-notes">
+      <h4>Know this</h4>
+      <ul>
+        <li><b>Fair, even battle.</b> Both sides field the same battalion of 5-man fire-teams, each led by its own leader. Wipe the enemy to win — <b>no respawns</b>.</li>
+        <li><b>Your crosshair is your cone of fire</b> — it opens up with range, sway, movement and fatigue. Point-blank you hit exactly where you point; aim down sights (<kbd>R-Click</kbd>) to tighten it.</li>
+        <li><b>Stance matters:</b> prone/crouch = lower profile, steadier aim, hide behind low cover. Prone with a bipod weapon is rock-steady.</li>
+        <li><b>Bodies can lie.</b> A wounded enemy may <b>play dead</b> and ambush you — real corpses pool blood, fakers don't. Friendly fire is <b>on</b>: mind your lanes.</li>
+        <li><b>Vehicles need a driver + gunner</b> — drive and an ally mans the gun; enemies crew idle rigs too. Small arms barely scratch a tank.</li>
+        <li><b>Drones</b> last a while and <b>rearm/recharge if you fly them back over your body</b>.</li>
+      </ul>
+    </div>
+    <p class="hint">press <kbd>/</kbd> or click ? to close</p>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

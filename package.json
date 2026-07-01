@@ -1,0 +1,14 @@
+{
+  "name": "realisticgunfareio",
+  "version": "0.1.0",
+  "description": "A physically-realistic top-down .io shooter. Real guns, real proportions, real ballistics.",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "MIT"
+}
